@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Excel from HTML table</title>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+        <link rel="stylesheet" type="text/css" href="css/style.css">
+        <script type="text/javascript" src="js/test.js"></script>
+        <script type="text/javascript" src="libs/xlsx.full.min.js"></script>
+        <script type="text/javascript" src="libs/FileSaver.min.js"></script>
+        <script type="text/javascript" src="libs/jquery-2.2.4.min.js"></script>
+    </head>
+    <body>
+        <div id="html">
+            <table id="table">
+                <tr>
+                    <th>id</th>
+                    <th>name</th>
+                    <th>count</th>
+                </tr>
+                <tr>
+                    <td>1</td>
+                    <td>Moscow</td>
+                    <td>1000000</td>
+                </tr>
+                <tr>
+                    <td>1</td>
+                    <td>Moscow</td>
+                    <td>1000000</td>
+                </tr>
+                <tr>
+                    <td>1</td>
+                    <td>Moscow</td>
+                    <td>1000000</td>
+                </tr>
+            </table>
+        </div>
+        <button onclick="app.loadExcel()">Excel</button>
+    </body>
+</html>

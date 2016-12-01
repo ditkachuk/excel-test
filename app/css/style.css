@@ -1,0 +1,21 @@
+body {
+	width: 800px;
+	margin: 0 auto;
+}
+
+table {
+	width: 100%;
+	margin: 10px;
+	border-collapse: collapse;
+}
+
+td, th {
+	border: 1px solid black;
+}
+
+textarea {
+	display: block;
+	width: 300px;
+	margin: 0 auto;
+	height: 200px;
+}
