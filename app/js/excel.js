@@ -1,20 +1,20 @@
 (function() {
     window.onload = function() {
-        window.app = new application();
+        window.excel = new application();
     };
 
     function application() {
         var self = this;
-        self.table = document.getElementById('table');
 
-		this.loadExcel = function() {
-            data = getDataFromTable(self.table);
-            widths = getWidthFromTable(self.table);
-            saveExcel(data, widths);
+        this.loadExcel = function (name, table, replaceData) {
+            var table = $(table);
+            data = getDataFromTable(table, replaceData);
+            widths = getWidthFromTable(table);
+            saveExcel(name, data, widths);
         };
 
-        function saveExcel(data, wscols) {
-            var ws_name = "Table";
+        function saveExcel(name, data, wscols) {
+            var ws_name = name;
 
             var wc_style_border = {
                 left: {style: 'thin', color: {auto: 1}},
@@ -27,7 +27,6 @@
                 bold: true
             };
 
-            /* dummy workbook constructor */
             function Workbook() {
                 if(!(this instanceof Workbook)) return new Workbook();
                 this.SheetNames = [];
@@ -41,7 +40,6 @@
                 return (epoch - new Date(Date.UTC(1899, 11, 30))) / (24 * 60 * 60 * 1000);
             }
 
-            /* convert an array of arrays in JS to a CSF spreadsheet */
             function sheet_from_array_of_arrays(data, opts) {
                 var ws = {};
                 var range = {s: {c:10000000, r:10000000}, e: {c:0, r:0 }};
@@ -55,7 +53,6 @@
                         if(cell.v == null) continue;
                         var cell_ref = XLSX.utils.encode_cell({c:C,r:R});
 
-                        /* TEST: proper cell types and value handling */
                         if(typeof cell.v === 'number') cell.t = 'n';
                         else if(typeof cell.v === 'boolean') cell.t = 'b';
                         else if(cell.v instanceof Date) {
@@ -63,27 +60,23 @@
                             cell.v = datenum(cell.v);
                         }
                         else cell.t = 's';
-                        cell.s = {border: wc_style_border};
-                        if (R == 0) cell.s.font = wc_style_font_header;
+                        cell.s = { border: wc_style_border, aligment: {wrapText: true} };
                         ws[cell_ref] = cell;
                     }
                 }
 
-                /* TEST: proper range */
                 if(range.s.c < 10000000) ws['!ref'] = XLSX.utils.encode_range(range);
                 return ws;
             }
             var ws = sheet_from_array_of_arrays(data);
 
-            /* TEST: add worksheet to workbook */
             wb.SheetNames.push(ws_name);
             wb.Sheets[ws_name] = ws;
 
-            /* TEST: column widths */
             ws['!cols'] = wscols;
 
             var wopts = { bookType:'xlsx', bookSST:false, type:'binary' };
-            console.log(wb);
+
             var wbout = XLSX.write(wb, wopts);
 
             function s2ab(s) {
@@ -93,21 +86,36 @@
               return buf;
             }
 
-            /* the saveAs call downloads a file on the local machine */
-            saveAs(new Blob([s2ab(wbout)],{type:""}), "test.xlsx");
+            saveAs(new Blob([s2ab(wbout)],{type:""}), name + '_' + (+ new Date()) +".xlsx");
         }
 
-        function getDataFromTable(element) {
+        function getDataFromTable(table, replaceData) {
             var myTableArray = [];
 
-            $(element).find("tr").each(function() {
+            $(table).find("tr").each(function() {
                 var arrayOfThisRow = [];
 
                 var tableHeader = $(this).find('th');
                 var tableData = $(this).find('td');
                 tableData = tableHeader.length > 0 ? tableHeader : tableData;
                 if (tableData.length > 0) {
-                    tableData.each(function() { arrayOfThisRow.push($(this).text()); });
+                    tableData.each(function () {
+                        var find = false;
+                        if (replaceData) {
+                            var $elm = $(this);
+                            $.each(replaceData, function(i, replace) {
+                                var replaceElement = $elm.find(replace.search);
+
+                                if (replaceElement[0]) {
+                                    find = true;
+
+                                    var text = replace.data[replaceElement.attr(replace.attr)];
+                                    arrayOfThisRow.push(text.replace(/^(")/, '').replace(/(")$/, ''));
+                                }
+                            });
+                        }
+                        if (!find) arrayOfThisRow.push($(this).text());
+                    });
                     myTableArray.push(arrayOfThisRow);
                 }
             });
@@ -118,8 +126,8 @@
         function getWidthFromTable(element) {
             var widths = [];
 
-            $(element).find("th").each(function() {
-                widths.push({wch: $(this).width() / 8});
+            $(element).find(".collapsible-row:first th").each(function () {
+                widths.push({wch: 20});
             });
 
             return widths;
